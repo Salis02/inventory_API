@@ -1,61 +1,155 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📦 Inventory Management API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem backend untuk mengelola stok barang dan transaksi keluar/masuk menggunakan Laravel 10.  
+Frontend dapat dibangun secara terpisah menggunakan HTML, CSS, dan JavaScript murni (tanpa framework).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- ✅ Login & Logout (Sanctum Token Based)
+- ✅ CRUD Barang
+- ✅ CRUD Transaksi Masuk & Keluar (otomatis update stok)
+- ✅ CRUD User Role `operator` (oleh admin)
+- ✅ Validasi stok < 10 (stok rendah)
+- ✅ Role-based access (`admin`, `operator`)
+- ✅ Aman dari race condition (pakai `lockForUpdate()`)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ⚙️ Instalasi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 1. Clone Project
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+git clone https://github.com/namamu/inventory-api.git
+cd inventory-api
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. Install Dependency
+bash
+Copy code
+composer install
+cp .env.example .env
+php artisan key:generate
+3. Setup Database
+Buat database baru di MySQL, lalu isi konfigurasi .env:
 
-## Laravel Sponsors
+makefile
+Copy code
+DB_DATABASE=inventory
+DB_USERNAME=root
+DB_PASSWORD=
+Lalu jalankan:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+bash
+Copy code
+php artisan migrate --seed
+Seeder akan membuat:
 
-### Premium Partners
+Admin default:
+username: admin
+password: password
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Operator default:
+username: operator
+password: password
 
-## Contributing
+4. Jalankan Server
+bash
+Copy code
+php artisan serve
+Akses API di:
+📍 http://localhost:8000/api
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+🔐 Autentikasi
+Login
+POST /api/login
 
-## Code of Conduct
+json
+Copy code
+{
+  "username": "admin",
+  "password": "password"
+}
+Response:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+json
+Copy code
+{
+  "token": "your_sanctum_token"
+}
+Gunakan token ini di header:
 
-## Security Vulnerabilities
+makefile
+Copy code
+Authorization: Bearer your_sanctum_token
+Logout
+POST /api/logout
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+🧭 Struktur Endpoint API
+📦 Barang (/api/barangs)
+GET – List barang
 
-## License
+POST – Tambah barang
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+PUT /{id} – Edit barang
+
+DELETE /{id} – Hapus barang
+
+Response menyertakan status stok: "status_stok": "Stok Rendah" / "Aman"
+
+🔄 Transaksi (/api/transaksis)
+GET – List transaksi
+
+POST – Tambah transaksi masuk / keluar
+
+DELETE /{id} – Hapus transaksi
+
+Validasi: transaksi keluar hanya jika stok ≥ jumlah dan tidak kurang dari 10
+
+Contoh:
+
+json
+Copy code
+{
+  "barang_id": 1,
+  "tanggal": "2025-06-24",
+  "tipe_transaksi": "keluar",
+  "jumlah": 2
+}
+👤 User (/api/users) – hanya admin
+GET – List operator
+
+POST – Tambah operator
+
+PUT /{id} – Edit
+
+DELETE /{id} – Hapus
+
+👮 Role Akses
+Endpoint	Admin	Operator
+/api/barangs	✅	✅
+/api/transaksis	✅	✅
+/api/users	✅	❌
+
+🌐 Konsumsi API oleh Frontend (HTML/CSS/JS)
+Gunakan AJAX Fetch API dari frontend:
+
+js
+Copy code
+fetch('http://localhost:8000/api/barangs', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+🧪 Tes Kinerja (Opsional)
+Gunakan Grafana K6 untuk stress test:
+
+bash
+Copy code
+k6 run transaksi-test.js
+
+
