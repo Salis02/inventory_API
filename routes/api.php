@@ -8,6 +8,20 @@ use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\Api\UserController;
 
+// Tambahkan ini di bagian atas file Anda
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Welcome to the Inventory API!',
+        'version' => '1.0',
+        'endpoints' => [
+            '/api/barangs' => 'GET|POST',
+            '/api/transaksis' => 'GET|POST',
+            '/api/user' => 'GET|POST',
+            
+        ]
+    ]);
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
